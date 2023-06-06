@@ -1,1 +1,1 @@
-# bad
+# Dementia: A brainf**k interpreter
