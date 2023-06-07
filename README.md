@@ -181,7 +181,7 @@ Now. Time to Actually print hello world. Here's how:
 
 We have 2 options. 
 1. Use a minimum of 2 bytes (clear cell 1 every for every char we print) OR
-2. Actually make use of the space we allocated on the heap (26 bytes minimum (maybe not but who cares (Am i misusing buzzwords?)))
+2. Actually make use of the space we have (26 bytes minimum)
 
 Y'know what i choose 1
 
@@ -201,7 +201,7 @@ Heres's the code to print "Hello, World!" by multiplying (i hand wrote this myse
 ++++++++++[>++++<-]>++++.<              ; cell[1] += (10 x 4) + 4 (,)
 ++++++++++[>----<-]>----<               ; cell[1] -= (10 x 4) + 4
 ++++++++++[>+++<-]>++.<                 ; cell[1] += (10 x 3) + 2 (SPACE)
-++++++++++[>---<-]>--<                  ; cell[1] += (10 x 3) + 2
+++++++++++[>---<-]>--<                  ; cell[1] -= (10 x 3) + 2
 ++++++++++[>+++++++++<-]>---.<          ; cell[1] += (10 x 9) - 3 (W)
 ++++++++++[>--------<-]>-------<        ; cell[1] -= (10 x 8) - 7 
 ++++++++++[>+++++++++++<-]>+.<          ; cell[1] += (10 x 11) + 1  (o)
@@ -214,6 +214,8 @@ Heres's the code to print "Hello, World!" by multiplying (i hand wrote this myse
 ++++++++++[>----------<-]>.<            ; cell[1] -= 10 x 10
 ++++++++++[>+++<-]>+++.<                ; cell[1] += (10 x 4) + 4 (!)
 ++++++++++[>---<-]>---<                 ; cell[1] -= (10 x 4) + 4
+++++++++++.                             ; LF
+----------
 
 ```
 
@@ -225,10 +227,10 @@ I wrote this 25 lines of abomination by hand at 1 AM and ill have school at 7:30
 
 So how do you run whatever this is?
 
-`cargo run -- -cells 2`
+`cargo run -- -cells 2 src/bf`
 
 or if you want to know what is going on:
 
-`cargo run -- -cells 2 -delay {whatever you like millisecs} -debug`
+`cargo run -- -cells 2 -delay {whatever you like millisecs} -debug src/bf`
 
 ## TODO: finish this doc
