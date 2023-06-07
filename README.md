@@ -214,7 +214,6 @@ Heres's the code to print "Hello, World!" by multiplying (i hand wrote this myse
 ++++++++++[>----------<-]>.<            ; cell[1] -= 10 x 10
 ++++++++++[>+++<-]>+++.<                ; cell[1] += (10 x 4) + 4 (!)
 ++++++++++[>---<-]>---<                 ; cell[1] -= (10 x 4) + 4
-               ; cell[1] -= (10 x 4) + 4
 
 ```
 
