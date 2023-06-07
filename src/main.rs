@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     env, fmt,
     io::{self, Read, Write},
     panic, process, thread, time,
@@ -43,30 +42,30 @@ where
 }
 
 // when teh actual fuck did rust just stop allowing arguments?
-fn args() -> HashMap<String, String> {
-    let args: Vec<String> = env::args().collect();
-    let mut map = HashMap::new();
-    let mut i = 1;
-    while i+1 < args.len() {
-        let key = args[i].clone();
-        let value = args[i+1].clone();
-        map.insert(key, value);
-        i += 2;
-    }
-    map
-}
+
 fn main() {
     // A shit load of vars
-    let opts = args();
-    let mut cell: Vec<u8> = vec![
-        0;
-        opts.get("-c")
-            .unwrap_or(&"2".to_string()) // requires a default value, dodgy as always
-            .parse()
-            .pretty_unwrap()
-    ];
+    let opts: Vec<String> = env::args().collect();
+    let mut cellslen: usize = 2;
+    let mut i:usize = 0;
+    let mut delay:u64 = 0;
+    while i < opts.len(){
+        match opts[i].as_str(){
+            "-c" => {
+                cellslen = opts[i+1].trim().parse().pretty_unwrap();
+                i+=1
+            }
+            "-d" => {
+                delay = opts[i+1].trim().parse().pretty_unwrap();
+                i+=1
+            }
+            _ => {}
+        }
+        i+=1
+    }
+    let mut cell:Vec<u8> = vec![0;cellslen];
     let mut ptr: usize = 0;
-    let mut stack: Vec<usize> = vec![];
+    let mut loop_stack: Vec<usize> = vec![];
     let mut i: usize = 0;
     let s = include_str!("bf");
     while i < s.chars().count() {
@@ -75,30 +74,31 @@ fn main() {
                 '>' => {
                     if (ptr + 1) >= cell.len() {
                         println!(
-                            "> at {{{i}}} is out of bounds (above {}), ptr: {ptr}",
-                            s.len()
+                            "'>' at {{{i}}} is out of bounds (above {}), ptr: {ptr}\nSetting ptr to 0",
+                            cell.len()
                         );
-                        return;
+                        ptr = 0;
                     }
                     ptr += 1
                 }
                 '<' => {
                     if (ptr) == 0 {
-                        println!("< at {{{i}}} is out of bounds (below 0), ptr: {ptr}");
+                        println!("'<' at {{{i}}} is out of bounds (below 0), ptr: {ptr}\nSetting ptr to {}",cell.len()-1);
+                        ptr = s.len()-1;
                         return;
                     }
                     ptr -= 1
                 }
                 '-' => {
                     if cell[ptr] == 0 {
-                        println!("Subtracting from 0!");
+                        println!("Attempting subtract from cell[{ptr}] (Underflow)");
                         return;
                     }
                     cell[ptr] = cell[ptr] - 1
                 }
                 '+' => {
                     if cell[ptr] + 1 >= 255 {
-                        println!("Attempting to add to cell[ptr] (Overflow)");
+                        println!("Attempting to add to cell[{ptr}] (Overflow)");
                         return;
                     }
                     cell[ptr] += 1
@@ -124,29 +124,37 @@ fn main() {
                         i += 1;
                         continue;
                     }
-                    stack.push(i)
+                    loop_stack.push(i)
                 }
                 ']' => {
-                    if cell[ptr] != 0 {
-                        i = *stack.last().unwrap();
+                    if loop_stack.is_empty() {
+                        println!("You have a ']' without a matching '[' at {{{i}}}");
+                        return;
+                    } else if cell[ptr] != 0 {
+                        i = *loop_stack.last().unwrap(); // Dont pop. just read
                     } else {
-                        stack.pop().unwrap();
+                        loop_stack.pop().unwrap();
                     }
                 }
-                _ => { i+=1 ;continue;/* ignore */ }
+                _ => {
+                    i += 1;
+                    continue; /* ignore */
+                }
             }
         } else {
             println!("Somehow Some(char) returned is None?");
             return;
         }
         println!(
-            "{:?}, ptr: {}, stack: {:?}, i: {i}, char: {}",
+            "{:?}, ptr: {}, loop_stack: {:?}, i: {i}, char: {}",
             cell,
             ptr,
-            stack,
+            loop_stack,
             s.chars().nth(i).unwrap()
         );
-        thread::sleep(time::Duration::from_millis(10));
+        if delay != 0{
+            thread::sleep(time::Duration::from_millis(delay));
+        }
         i += 1;
     }
     println!()
