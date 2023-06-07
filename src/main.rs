@@ -1,7 +1,7 @@
 use std::{
-    env, fmt,
+    env, fmt, fs,
     io::{self, Read, Write},
-    panic, process, thread, time,
+    process, thread, time,
 };
 
 pub trait pretty_unwrap<T, E> {
@@ -17,15 +17,7 @@ where
         match self {
             Ok(val) => val,
             Err(err) => {
-                // Get loc from call
-                let loc = panic::Location::caller();
-                println!(
-                    "\x1b[31m Err! at {} -> {}:{}\n{}\x1b[m",
-                    loc.file(),
-                    loc.line(),
-                    loc.column(),
-                    err
-                );
+                println!("\x1b[31m{}\x1b[m", err);
                 process::exit(1);
             }
         }
@@ -34,71 +26,85 @@ where
         match self {
             Ok(v) => v,
             Err(err) => {
-                println!("\x1b[31m{}\x1b[m", err);
+                println!("\x1b[33m{}\x1b[m", err);
                 val
             }
         }
     }
 }
 
-// when teh actual fuck did rust just stop allowing arguments?
-
+// Yeah i know my code suck. I will improve 
 fn main() {
-    // A shit load of vars
+    // A shit load of vars. Definitely runs on my gaming rig
     let opts: Vec<String> = env::args().collect();
-    let mut cellslen: usize = 2;
-    let mut i:usize = 0;
-    let mut delay:u64 = 0;
-    while i < opts.len(){
-        match opts[i].as_str(){
-            "-c" => {
-                cellslen = opts[i+1].trim().parse().pretty_unwrap();
-                i+=1
-            }
-            "-d" => {
-                delay = opts[i+1].trim().parse().pretty_unwrap();
-                i+=1
-            }
-            _ => {}
+    for i in opts.iter() {
+        if i == "-h" || i == "-help" {
+            // dunno how to format
+            println!("dementia [OPTIONS] TARGET | cargo run -- [OPTIONS] TARGET\nTARGET Must be the last argument\n    -cells [LENGTH]          mount of cells\n    -delay [DELAY]           delay in millisecs\n    -h | -help                help\n    -debug          debug output\nEXAMPLE: dementia -cells 10 -debug -delay 2000 brainfuck.bf");
+            return;
         }
-        i+=1
     }
-    let mut cell:Vec<u8> = vec![0;cellslen];
+    let mut cellslen: usize = 2;
+    let mut k: usize = 0;
+    let mut delay: u64 = 0;
+    let mut dbg: bool = false;
+    while k < opts.len() {
+        match opts[k].as_str() {
+            "-cells" => {
+                cellslen = opts[k + 1].trim().parse().pretty_unwrap();
+                k += 1
+            }
+            "-delay" => {
+                delay = opts[k + 1].trim().parse().pretty_unwrap();
+                k += 1
+            }
+            "-debug" => {
+                dbg = true;
+            }
+            _ => {
+                if k != opts.len()-1 {
+                    println!("Unknown argument: {}",opts[k])
+                }
+            }
+        }
+        k += 1
+    }
+    let mut cell: Vec<u8> = vec![0; cellslen];
     let mut ptr: usize = 0;
     let mut loop_stack: Vec<usize> = vec![];
-    let mut i: usize = 0;
-    let s = include_str!("bf");
-    while i < s.chars().count() {
-        if let Some(char) = s.chars().nth(i) {
+    let mut ip: usize = 0;
+    // Probably angered a few stack evangelists?/extremist?/heap haters?/wtf nvm
+    let s = fs::read_to_string(opts.last().unwrap()).pretty_unwrap();
+    while ip < s.chars().count() {
+        if let Some(char) = s.chars().nth(ip) {
             match char {
                 '>' => {
                     if (ptr + 1) >= cell.len() {
                         println!(
-                            "'>' at {{{i}}} is out of bounds (above {}), ptr: {ptr}\nSetting ptr to 0",
+                            "\n'>' at {{{ip}}} is out of bounds (above {}), ptr: {ptr}",
                             cell.len()
                         );
-                        ptr = 0;
+                        return;
                     }
                     ptr += 1
                 }
                 '<' => {
                     if (ptr) == 0 {
-                        println!("'<' at {{{i}}} is out of bounds (below 0), ptr: {ptr}\nSetting ptr to {}",cell.len()-1);
-                        ptr = s.len()-1;
+                        println!("\n'<' at {{{ip}}} is out of bounds (below 0), ptr: {ptr}");
                         return;
                     }
                     ptr -= 1
                 }
                 '-' => {
                     if cell[ptr] == 0 {
-                        println!("Attempting subtract from cell[{ptr}] (Underflow)");
+                        println!("\n'-' at {{{ip}}}. Attempting subtract from cell[{ptr}] (Underflow)");
                         return;
                     }
                     cell[ptr] = cell[ptr] - 1
                 }
                 '+' => {
                     if cell[ptr] + 1 >= 255 {
-                        println!("Attempting to add to cell[{ptr}] (Overflow)");
+                        println!("\n'+' at {{{ip}}}. Attempting to add to cell[{ptr}] (Overflow)");
                         return;
                     }
                     cell[ptr] += 1
@@ -117,27 +123,35 @@ fn main() {
                 // Still shitty [ and ] implementation
                 '[' => {
                     if cell[ptr] == 0 {
-                        // this will crash if [ ]]
-                        while s.chars().nth(i).unwrap() != ']' {
-                            i += 1;
+                        while s.chars().nth(ip).unwrap() != ']' {
+                            ip += 1;
                         }
-                        i += 1;
+                        ip += 1;
                         continue;
                     }
-                    loop_stack.push(i)
+                    loop_stack.push(ip)
                 }
                 ']' => {
                     if loop_stack.is_empty() {
-                        println!("You have a ']' without a matching '[' at {{{i}}}");
+                        println!("\nYou have a ']' without a matching '[' at {{{ip}}}");
                         return;
                     } else if cell[ptr] != 0 {
-                        i = *loop_stack.last().unwrap(); // Dont pop. just read
+                        ip = *loop_stack.last().unwrap(); // Dont pop. just read
                     } else {
                         loop_stack.pop().unwrap();
                     }
                 }
+                ';' => {
+                    // A comment
+                    while s.chars().nth(ip).unwrap() != '\n'{
+                        if ip+1 >= s.chars().count(){
+                            return;
+                        }
+                        ip+=1
+                    }
+                }
                 _ => {
-                    i += 1;
+                    ip += 1;
                     continue; /* ignore */
                 }
             }
@@ -145,17 +159,19 @@ fn main() {
             println!("Somehow Some(char) returned is None?");
             return;
         }
-        println!(
-            "{:?}, ptr: {}, loop_stack: {:?}, i: {i}, char: {}",
-            cell,
-            ptr,
-            loop_stack,
-            s.chars().nth(i).unwrap()
-        );
-        if delay != 0{
+        if dbg {
+            println!(
+                "{:?}, ptr: {}, loop_stack: {:?}, i: {ip}, char: {}",
+                cell,
+                ptr,
+                loop_stack,
+                s.chars().nth(ip).unwrap()
+            );
+        }
+        if delay != 0 {
             thread::sleep(time::Duration::from_millis(delay));
         }
-        i += 1;
+        ip += 1;
     }
     println!()
 }
