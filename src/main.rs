@@ -75,8 +75,8 @@ fn main() {
     let mut ip: usize = 0;
     // Probably angered a few stack evangelists?/extremist?/heap haters?/wtf nvm
     let s = fs::read_to_string(opts.last().unwrap()).pretty_unwrap();
-    let ilen = s.chars().count();
     let mut t = s.chars(); // what the actual fuck is wrong with you
+    let ilen = t.clone().count();
     while ip < ilen {
         if let Some(char) = t.nth(ip) {
             println!("{char}");
@@ -160,6 +160,7 @@ fn main() {
                     }
                 }
                 _ => {
+                    println!("Unknown command: {char}");
                     ip += 1;
                     continue; /* ignore */
                 }
