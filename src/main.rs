@@ -33,7 +33,7 @@ where
     }
 }
 
-// Yeah i know my code suck. I will improve 
+// Yeah i know my code suck. I will improve
 fn main() {
     // A shit load of vars. Definitely runs on my gaming rig
     let opts: Vec<String> = env::args().collect();
@@ -62,8 +62,8 @@ fn main() {
                 dbg = true;
             }
             _ => {
-                if k != opts.len()-1 {
-                    println!("Unknown argument: {}",opts[k])
+                if k != opts.len() - 1 && k != 0 {
+                    println!("Unknown argument: {}", opts[k])
                 }
             }
         }
@@ -75,8 +75,11 @@ fn main() {
     let mut ip: usize = 0;
     // Probably angered a few stack evangelists?/extremist?/heap haters?/wtf nvm
     let s = fs::read_to_string(opts.last().unwrap()).pretty_unwrap();
-    while ip < s.chars().count() {
-        if let Some(char) = s.chars().nth(ip) {
+    let ilen = s.chars().count();
+    let mut t = s.chars(); // what the actual fuck is wrong with you
+    while ip < ilen {
+        if let Some(char) = t.nth(ip) {
+            println!("{char}");
             match char {
                 '>' => {
                     if (ptr + 1) >= cell.len() {
@@ -97,17 +100,21 @@ fn main() {
                 }
                 '-' => {
                     if cell[ptr] == 0 {
-                        println!("\n'-' at {{{ip}}}. Attempting subtract from cell[{ptr}] (Underflow)");
-                        return;
+                        println!(
+                            "\n'-' at {{{ip}}}. Attempting subtract from cell[{ptr}] (Underflow)"
+                        );
+                        cell[ptr] = u8::MAX; // Underflow to 255. dunno if its right
+                    } else {
                     }
                     cell[ptr] = cell[ptr] - 1
                 }
                 '+' => {
                     if cell[ptr] + 1 >= 255 {
                         println!("\n'+' at {{{ip}}}. Attempting to add to cell[{ptr}] (Overflow)");
-                        return;
+                        cell[ptr] = u8::MIN
+                    } else {
+                        cell[ptr] += 1
                     }
-                    cell[ptr] += 1
                 }
                 '.' => {
                     print!("{}", cell[ptr] as char);
@@ -123,7 +130,7 @@ fn main() {
                 // Still shitty [ and ] implementation
                 '[' => {
                     if cell[ptr] == 0 {
-                        while s.chars().nth(ip).unwrap() != ']' {
+                        while t.nth(ip).unwrap() != ']' {
                             ip += 1;
                         }
                         ip += 1;
@@ -143,11 +150,13 @@ fn main() {
                 }
                 ';' => {
                     // A comment
-                    while s.chars().nth(ip).unwrap() != '\n'{
-                        if ip+1 >= s.chars().count(){
+                    println!("!{}",t.nth(ip).unwrap());
+                    while t.nth(ip).unwrap() != '\n' {
+                        println!("{}",t.nth(ip).unwrap());
+                        if ip + 1 >= ilen {
                             return;
                         }
-                        ip+=1
+                        ip += 1
                     }
                 }
                 _ => {

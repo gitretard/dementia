@@ -1,3 +1,8 @@
+### NOT WORKING!
+
+see `cargo run -- -cells 2 -debug -delay 100 src/bf`
+see the t mutable variable in main()
+
 ## Dementia: A brainfuck interpreter and Some brainfuck tutorial
 
 
@@ -12,6 +17,9 @@ TARGET Must be the last argument
 EXAMPLE: dementia -c 10 -d 2000 brainfuck.bf
 ```
 
+## Known issues
+1. When using a variable to hold s.chars(). it returns None??????. I need to fix the performance issue Also WHY THE ACTUAL FUCK DOES .nth() REQUIRES THE FUCKING VARIABLE TO BE mut??????????. IT ALSO IGNORE SOME FUCKING CHARACTERS????
+ 
 ## Tutorial
 
 Oh? Don't know how to write brainfuck? I'll tell you something
