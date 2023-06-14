@@ -1,9 +1,7 @@
-### NOT WORKING!
-
 see `cargo run -- -cells 2 -debug -delay 100 src/bf`
 see the t mutable variable in main()
 
-## Dementia: A brainfuck interpreter and Some brainfuck tutorial
+## Dementia: A brainfuck interpreter (with extra commands!) and Some brainfuck tutorial
 
 
 ## Usage:
@@ -118,13 +116,57 @@ These are the hardest to use by far. Also i won't give any examples for these . 
 ```
     If cell[ptr] != 0, then instead of incrementing the instruction pointer by one like normally, jump it back to the matching [.
 ```
-`";"` (NON STANDARD):
-    `implemented in dementia for inline comments`
+### Any more commands after these are non standard. (I made them up and put them into the interpreter)
+
+"`_`"
+```
+    Extended versoion of the standard output 
+    Will print out anything ranging from ptr to the value in ptr 
+
+    [2] [115] [33] [65] [0] [0]
+    2 = Buffer size
+    115 = s
+    33 = !
+    65 = A
+    
+    This will only print out "s!" due to the fact that the value inside the cell is only 2
+    so it will look someting like
+    [ptr..cell[ptr]] 
+```
+
+
+`"/"`:
+```
+    Extended version of the normal input.
+    Will create a buffer with the size being the value of the current cell and copy them into the cells array
+    This will create a read buffer of 4 bytes in size
+    [3] [0] [0] [0] [0] [0]
+     ^
+     After executing:
+        Input: r!
+    The cells array will now look something lie kthis:
+    [3] [114] [33] [10] [0] [0]
+    2 = Buffer size
+    114 = r
+    33 = !
+    10 = NEWLINE
+
+    But if we give the same input but this time the buffer size is only 1.
+    
+    [1] [114] [0] [0] [0] [0]
+```
+
+"`~`"'
+```
+    Resets ptr
+```
+
+`";"` : inline comments (like asm)
 
 ### Hello, World! 
 
 
-First we need to know how to multiply numbers
+First we need to know how to multiply numbers (standard commands only!)
 
 For example: 9x9
 

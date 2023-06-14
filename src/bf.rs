@@ -1,5 +1,7 @@
 use std::{
-    env, fmt, fs, io,
+    env,
+    fmt,
+    fs, io,
     io::{Read, Write},
     process, thread, time,
 };
@@ -77,10 +79,10 @@ pub fn run() {
     while ip < ilen {
         match t[ip] {
             '>' => {
-                if (ptr + 1) >= cell.len() {
+                if (ptr + 1) >= cellslen {
                     println!(
                         "\n'>' at {{{ip}}} is out of bounds (above {}), ptr: {ptr}",
-                        cell.len()
+                        cellslen
                     );
                     return;
                 }
@@ -115,7 +117,9 @@ pub fn run() {
             }
             ',' => {
                 let mut buf: [u8; 1] = [0; 1];
-                print!("\ninput: ");
+                if dbg {
+                    print!("\ninput: ");
+                }
                 io::stdout().flush().unwrap();
                 io::stdin().read(&mut buf).unwrap();
                 cell[ptr] = buf[0];
@@ -141,6 +145,7 @@ pub fn run() {
                     loop_stack.pop().unwrap();
                 }
             }
+            // I mean this destroys the whole purpose of brainfuck (of being simple with only 8 commands). but who cares
             ';' => {
                 // A comment
                 while t[ip] != '\n' {
@@ -150,8 +155,58 @@ pub fn run() {
                     ip += 1
                 }
             }
+            '*' => {
+                // Bomb
+                cell[ptr] = 0
+            }
+            '_' => {
+                // extended print
+                // Prints cell[ptr..cell[ptr]]
+                let len = cell[ptr] as usize;
+                if cell[ptr] == 0 {
+                    println!("Attempting to multi-cell print with 0 cells. ip: {ip}, ptr: {ptr} ");
+                    return;
+                }
+                if (ptr + len) >= cellslen {
+                    println!("Attempting to multi-cell print. ip: {ip}, ptr: {ptr}, len {len}. ptr + len >= cellslen: {cellslen}");
+                    return;
+                }
+                let mut tmpptr = ptr.clone();
+                tmpptr+=1;
+                while tmpptr != len {
+                    print!("{}", cell[tmpptr] as char);
+                    io::stdout().flush().unwrap();
+                    tmpptr += 1;
+                }
+            }
+            '/' => {
+                // extended input
+                // get buffer size from current cell (max 255 ofc)
+                let size = cell[ptr] as usize;
+                let mut ibuf: Vec<u8> = vec![0; size];
+                if size >= cellslen{
+                    println!("Attempting to multi-cell read. ip: {ip}, ptr: {ptr}, size: {size}. ptr + size >= cellslen: {cellslen}");
+                    return;
+                }
+                if dbg {
+                    print!("\nInput: ");
+                    io::stdout().flush().unwrap();
+                }
+                io::stdin().read(&mut ibuf).unwrap();
+                let mut i = 0;
+                let ptr = ptr + 1;
+                while i < size {
+                    cell[ptr + i] = ibuf[i];
+                    i+=1
+                }
+            }
+            '~' => {
+                // Reset ptr
+                ptr = 0
+            }
             _ => {
                 ip += 1;
+                println!("Unknown Char");
                 continue; // ignore
             }
         }
